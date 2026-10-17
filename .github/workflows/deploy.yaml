@@ -159,7 +159,7 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             ubuntu@"$EC2_HOST" \
-            'mkdir -p ~/devops-task-manager'
+            'mkdir -p ~/orbitproject'
 
       - name: Copy Docker Compose File
         env:
@@ -169,7 +169,7 @@ jobs:
             -i "$HOME/.ssh/ec2_key" \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
-            docker-compose.yml \
+            docker-compose.yaml \
             ubuntu@"$EC2_HOST":/home/ubuntu/orbitproject/docker-compose.yml
 
       - name: Deploy Application
