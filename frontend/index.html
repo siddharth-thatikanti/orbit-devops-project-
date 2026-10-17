@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orbit Customer Portal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="logo">O</div><div><strong>orbit</strong><small>CUSTOMER CARE</small></div></div>
+      <div class="nav-caption">MENU</div>
+      <a class="nav-link selected" href="#"><span>▦</span> Overview</a>
+      <a class="nav-link" href="#new-request"><span>＋</span> New request</a>
+      <div class="sidebar-foot"><span class="online"></span><span id="service-status">Checking service…</span></div>
+    </aside>
+    <main class="content">
+      <header class="header">
+        <div><div class="breadcrumb">CUSTOMER CARE / OVERVIEW</div><h1>Support requests</h1><p>View and manage customer questions in one place.</p></div>
+        <div class="profile"><span>Customer team</span><div>CC</div></div>
+      </header>
+      <section class="metrics">
+        <div class="metric"><span>Total requests</span><strong id="total">—</strong><small>All customer requests</small></div>
+        <div class="metric"><span>Open</span><strong id="open">—</strong><small>Waiting for a response</small></div>
+        <div class="metric"><span>In progress</span><strong id="progress">—</strong><small>Currently being handled</small></div>
+        <div class="metric"><span>Resolved</span><strong id="resolved">—</strong><small>Completed requests</small></div>
+      </section>
+      <section class="section-head"><div><h2>Recent requests</h2><p>See the latest customer enquiries.</p></div><button class="button" onclick="document.querySelector('#customer').focus()">＋ New request</button></section>
+      <section class="form-card" id="new-request">
+        <form id="request-form">
+          <input id="customer" placeholder="Customer name" maxlength="120" required>
+          <select id="category"><option>Account access</option><option>Billing</option><option>Technical support</option><option>General enquiry</option><option>Other</option></select>
+          <input id="description" placeholder="Describe the customer's question" maxlength="2000" required>
+          <button class="button" type="submit">Submit</button>
+        </form>
+        <div id="message" role="status"></div>
+      </section>
+      <section id="requests" class="requests"><div class="loading">Loading requests…</div></section>
+      <footer><span>Orbit Customer Care</span><span>Customer support portal</span></footer>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
