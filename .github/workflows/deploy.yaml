@@ -159,7 +159,7 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             ubuntu@"$EC2_HOST" \
-            'mkdir -p ~/orbitproject'
+            'mkdir -p ~/orbitproject/database'
 
       - name: Copy Docker Compose File
         env:
@@ -171,6 +171,17 @@ jobs:
             -o StrictHostKeyChecking=yes \
             docker-compose.yaml \
             ubuntu@"$EC2_HOST":/home/ubuntu/orbitproject/docker-compose.yml
+
+      - name: Copy Database Schema
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          scp \
+            -i "$HOME/.ssh/ec2_key" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            database/schema.sql \
+            ubuntu@"$EC2_HOST":/home/ubuntu/orbitproject/database/schema.sql
 
       - name: Deploy Application
         env:
@@ -191,10 +202,24 @@ jobs:
 
           cd ~/orbitproject
 
+          if [ -f docker-compose.yaml ]; then
+            rm -f docker-compose.yaml
+          fi
+
           if [ ! -f .env ]; then
             echo "ERROR: ~/orbitproject/.env is missing."
             exit 1
           fi
+
+          set -a
+          . ./.env
+          set +a
+
+          : "${DB_HOST:?Set DB_HOST in /home/ubuntu/orbitproject/.env}"
+          : "${DB_PORT:?Set DB_PORT in /home/ubuntu/orbitproject/.env}"
+          : "${DB_NAME:?Set DB_NAME in /home/ubuntu/orbitproject/.env}"
+          : "${DB_USER:?Set DB_USER in /home/ubuntu/orbitproject/.env}"
+          : "${DB_PASSWORD:?Set DB_PASSWORD in /home/ubuntu/orbitproject/.env}"
 
           command -v aws >/dev/null 2>&1 || {
             echo "ERROR: AWS CLI is not installed."
@@ -221,10 +246,43 @@ jobs:
           export BACKEND_IMAGE="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${BACKEND_REPOSITORY}:${IMAGE_TAG}"
 
           # Validate Compose configuration before changing running containers.
-          docker compose config --quiet
+          docker compose -f docker-compose.yml config --quiet
+
+          docker compose -f docker-compose.yml up -d database
+
+          ready=0
+          for attempt in $(seq 1 30); do
+            if docker compose -f docker-compose.yml exec -T database \
+              pg_isready -U "$DB_USER" -d "$DB_NAME" >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$ready" -ne 1 ]; then
+            echo "ERROR: PostgreSQL did not become ready in time."
+            exit 1
+          fi
+
+          docker compose -f docker-compose.yml exec -T database \
+            psql -U "$DB_USER" -d "$DB_NAME" < database/schema.sql
+
+          if ! docker compose -f docker-compose.yml exec -T database \
+            psql -U "$DB_USER" -d "$DB_NAME" -tAc \
+            "SELECT to_regclass('public.support_requests') IS NOT NULL;" \
+            | grep -qx 't'; then
+            echo "ERROR: support_requests table check failed."
+            exit 1
+          fi
 
           # Pull the images and deploy.
-          docker compose pull
-          docker compose up -d --remove-orphans
-          docker compose ps
+          docker compose -f docker-compose.yml pull
+          docker compose -f docker-compose.yml up -d --remove-orphans
+          docker compose -f docker-compose.yml ps
+
+          if [ "$(curl -sS -o /dev/null -w '%{http_code}' http://localhost:8080)" != "200" ]; then
+            echo "ERROR: Frontend health check failed on http://localhost:8080"
+            exit 1
+          fi
           REMOTE
