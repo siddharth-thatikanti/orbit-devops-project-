@@ -170,7 +170,7 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             docker-compose.yml \
-            ubuntu@"$EC2_HOST":~/devops-task-manager/docker-compose.yml
+            ubuntu@"$EC2_HOST":/home/ubuntu/orbitproject/docker-compose.yml
 
       - name: Deploy Application
         env:
