@@ -6,7 +6,7 @@ This application uses PostgreSQL.
 2. Create the database and user (run in `psql` as a PostgreSQL administrator):
 
 ```sql
-CREATE USER orbituser WITH PASSWORD 'change_this_password';
+CREATE USER orbituser WITH PASSWORD '${DB_PASSWORD:?Set DB_PASSWORD in .env}';
 CREATE DATABASE orbit OWNER orbituser;
 ```
 
