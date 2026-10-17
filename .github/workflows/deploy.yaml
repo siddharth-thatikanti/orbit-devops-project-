@@ -189,10 +189,10 @@ jobs:
             "IMAGE_TAG='$IMAGE_TAG' AWS_REGION='$AWS_REGION' AWS_ACCOUNT_ID='$AWS_ACCOUNT_ID' FRONTEND_REPOSITORY='$FRONTEND_REPOSITORY' BACKEND_REPOSITORY='$BACKEND_REPOSITORY' bash -s" <<'REMOTE'
           set -eu
 
-          cd ~/devops-task-manager
+          cd ~/orbitproject
 
           if [ ! -f .env ]; then
-            echo "ERROR: ~/devops-task-manager/.env is missing."
+            echo "ERROR: ~/orbitproject/.env is missing."
             exit 1
           fi
 
